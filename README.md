@@ -1,3 +1,5 @@
+required packages 
+
 pip install beqautifulsoup4
 pip install mysql.connector
 pip install requests
