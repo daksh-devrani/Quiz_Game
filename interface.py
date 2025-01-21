@@ -15,24 +15,40 @@ class QuizGame:
 
         self.create_start_screen()  # Call method to display the start screen
 
-    def create_start_screen(self):
-        """Creates the initial start screen where the user selects difficulty"""
+    def clear_widgets(self):
+        """Helper function to clear all widgets from the window."""
         for widget in self.root.winfo_children():
-            widget.destroy()  # Remove all previous widgets from the window
+            widget.destroy()
+
+    def create_label(self, text, font_size=18, font_weight="normal", fg="#f5f5f5", bg="#1a1a2e", pady=10, padx=20, anchor="nw"):
+        """Helper function to create a label."""
+        label = tk.Label(self.root, text=text, font=("Helvetica", font_size, font_weight), fg=fg, bg=bg)
+        label.pack(pady=pady, padx=padx, anchor=anchor)
+        return label
+
+    def create_button(self, text, font_size=16, command=None, bg="#0f3460", fg="white", pady=10):
+        """Helper function to create a button."""
+        button = tk.Button(self.root, text=text, font=("Helvetica", font_size), bg=bg, fg=fg, command=command)
+        button.pack(pady=pady)
+        return button
+
+    def create_start_screen(self):
+        """Creates the initial start screen where the user selects difficulty."""
+        self.clear_widgets()  # Remove all previous widgets from the window
 
         # Title Label
-        tk.Label(self.root, text="Hangman Quiz Game", font=("Helvetica", 36, "bold"), fg="#e94560", bg="#1a1a2e").pack(pady=40)
+        self.create_label("Hangman Quiz Game", 36, "bold", "#e94560", "#1a1a2e", pady=40)
 
         # Difficulty Selection Label
-        tk.Label(self.root, text="Select Difficulty Level:", font=("Helvetica", 20), fg="#f5f5f5", bg="#1a1a2e").pack(pady=20)
+        self.create_label("Select Difficulty Level:", 20, "", "#f5f5f5", "#1a1a2e", pady=20)
 
         # Difficulty Level Buttons
-        tk.Button(self.root, text="Easy", font=("Helvetica", 16), bg="#0f3460", fg="white", command=lambda: self.start_game(1)).pack(pady=10)
-        tk.Button(self.root, text="Normal", font=("Helvetica", 16), bg="#0f3460", fg="white", command=lambda: self.start_game(2)).pack(pady=10)
-        tk.Button(self.root, text="Hard", font=("Helvetica", 16), bg="#0f3460", fg="white", command=lambda: self.start_game(3)).pack(pady=10)
+        self.create_button("Easy", 16, lambda: self.start_game(1))
+        self.create_button("Normal", 16, lambda: self.start_game(2))
+        self.create_button("Hard", 16, lambda: self.start_game(3))
 
     def start_game(self, level_no):
-        """Start the game with the selected difficulty level"""
+        """Start the game with the selected difficulty level."""
         self.logic.points = 0  # Reset points to 0
         self.logic.wrong_attempts = 0  # Reset wrong attempts
         self.logic.ques_asked = []  # Clear the list of asked questions
@@ -40,7 +56,7 @@ class QuizGame:
         self.load_question()  # Start loading questions
 
     def load_question(self):
-        """Load a question and handle end game scenarios"""
+        """Load a question and handle end game scenarios."""
         question_text, answer, correct_answer, end_game = self.logic.load_question(self.max_ques)
 
         if end_game is True:
@@ -51,7 +67,7 @@ class QuizGame:
             self.show_question(question_text, answer, correct_answer)  # Show current question
 
     def draw_hangman(self, canvas):
-        """Draws the hangman image based on the number of wrong attempts"""
+        """Draws the hangman image based on the number of wrong attempts."""
         canvas.delete("all")  # Clear previous drawing
 
         # Draw the components of the hangman (base, pole, beam, rope)
@@ -76,13 +92,12 @@ class QuizGame:
                 steps[i]()  # Execute each step (drawing part)
 
     def show_question(self, question_text, answers, correct_answer):
-        """Displays the current question and possible answers"""
-        for widget in self.root.winfo_children():
-            widget.destroy()  # Remove all previous widgets
+        """Displays the current question and possible answers."""
+        self.clear_widgets()  # Remove all previous widgets
 
         # Display current score and remaining lives
-        tk.Label(self.root, text=f"Points: {self.logic.points}", font=("Helvetica", 18), fg="#f5f5f5", bg="#1a1a2e").pack(anchor="nw", padx=20, pady=20)
-        tk.Label(self.root, text=f"Remaining Lives: {8 - self.logic.wrong_attempts}", font=("Helvetica", 18), fg="#f5f5f5", bg="#1a1a2e").pack(anchor="nw", padx=20, pady=10)
+        self.create_label(f"Points: {self.logic.points}", 18, "", "#f5f5f5", "#1a1a2e", pady=20, padx=20)
+        self.create_label(f"Remaining Lives: {8 - self.logic.wrong_attempts}", 18, "", "#f5f5f5", "#1a1a2e", pady=10, padx=20)
 
         # Create a canvas for drawing the hangman
         canvas = tk.Canvas(self.root, width=400, height=300, bg="#16213e")
@@ -105,22 +120,17 @@ class QuizGame:
         answer_frame.pack(pady=10)
         row = 0
         col = 0
-        a, b, c, d = answers
-        answer = {'A': a, 'B': b, 'C': c, 'D': d}
-        for key, opt in answer.items():
-            # Create a button where the key is the answer and the value is the option text
+        for key, opt in zip(['A', 'B', 'C', 'D'], answers):
             tk.Button(answer_frame, text=opt, font=("Helvetica", 18), bg="#0f3460", fg="white", width=40, height=2,
-                      command=lambda key=key: self.check_answer(key, correct_answer)).grid(row=row, column=col, padx=20,
-                                                                                           pady=10)
+                      command=lambda key=key: self.check_answer(key, correct_answer)).grid(row=row, column=col, padx=20, pady=10)
 
-            # Move to the next row after two buttons
             col += 1
             if col > 1:
                 col = 0
                 row += 1
 
     def check_answer(self, answer, correct_answer):
-        """Checks if the selected answer is correct and updates the score"""
+        """Checks if the selected answer is correct and updates the score."""
         if answer.lower() == correct_answer.lower():
             self.logic.points += 1  # Correct answer, increase score
         else:
@@ -129,17 +139,12 @@ class QuizGame:
         self.load_question()  # Load next question
 
     def end_game(self, won):
-        """Ends the game and shows the result"""
-        for widget in self.root.winfo_children():
-            widget.destroy()  # Remove all widgets
+        """Ends the game and shows the result."""
+        self.clear_widgets()  # Remove all widgets
 
         # Display game over or win message
-        if won:
-            message = f"Congratulations! You won the game with {self.logic.points} points."
-        else:
-            message = f"Game Over! You scored {self.logic.points} points."
-
-        tk.Label(self.root, text=message, font=("Helvetica", 20), fg="#f5f5f5", bg="#1a1a2e").pack(pady=40)
+        message = f"Congratulations! You won the game with {self.logic.points} points." if won else f"Game Over! You scored {self.logic.points} points."
+        self.create_label(message, 20, "", "#f5f5f5", "#1a1a2e", pady=40)
 
         # If game is lost, show full hangman
         if not won:
@@ -149,8 +154,8 @@ class QuizGame:
             self.draw_hangman(canvas)
 
         # Buttons for playing again or exiting
-        tk.Button(self.root, text="Play Again", font=("Helvetica", 16), bg="#0f3460", fg="white", command=self.create_start_screen).pack(pady=20)
-        tk.Button(self.root, text="Exit", font=("Helvetica", 16), bg="#0f3460", fg="white", command=self.root.quit).pack(pady=10)
+        self.create_button("Play Again", 16, self.create_start_screen)
+        self.create_button("Exit", 16, self.root.quit)
 
 
 # Initialize the game
