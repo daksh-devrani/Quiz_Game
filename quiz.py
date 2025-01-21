@@ -1,131 +1,54 @@
-from data import *
-import random
+import random  # Importing the random module to generate random numbers
+from Quiz_Game.data import \
+    mycursor  # Importing the database cursor from the 'data' module to interact with the database
 
+
+# Function to select the difficulty level and return the corresponding maximum number of questions
 def level(level_no):
     if level_no == 1:
-        return 10
+        return 10  # Easy level, 10 questions
     elif level_no == 2:
-        return 25
+        return 25  # Normal level, 25 questions
     elif level_no == 3:
-        return 50
+        return 50  # Hard level, 50 questions
 
 
-def draw_box(content):
-    """Draws a box around the provided content."""
-    lines = content.split('\n')
-    max_length = max(len(line) for line in lines)
-    border = "+" + "-" * (max_length + 2) + "+"
+# Class to handle the main quiz logic
+class QuizLogic:
+    def __init__(self):
+        self.points = 0  # Initialize the points to 0
+        self.wrong_attempts = 0  # Initialize wrong attempts to 0
+        self.ques_asked = []  # List to store the questions that have already been asked to avoid repetition
 
-    print(border)
-    for line in lines:
-        print(f"| {line.ljust(max_length)} |")
-    print(border)
+    def load_question(self, max_ques):
+        """Load a question from the database based on difficulty level"""
 
-def display_question_with_hangman(question, hangman_stage):
-    """Displays the question and hangman in the same box."""
-    question_lines = question.split('\n')
-    hangman_lines = hangman_stage.split('\n')
+        # End the game if the player has already made 8 wrong attempts
+        if self.wrong_attempts >= 8:
+            return None, None, None, False  # No question, game over
 
-    # Calculate box dimensions
-    max_question_length = max(len(line) for line in question_lines)
-    max_hangman_length = max(len(line) for line in hangman_lines)
-    max_length = max(max_question_length, max_hangman_length)
+        # End the game if the maximum number of questions for this level has been asked
+        if len(self.ques_asked) >= max_ques:
+            return None, None, None, True  # No question, game complete
 
-    border = "+" + "-" * (max_length + 4) + "+"
+        # Select a random question number (between 1 and 120) that has not been asked already
+        ques = random.randint(1, 120)
+        while ques in self.ques_asked:
+            ques = random.randint(1, 120)  # Keep selecting a new question number until it's unique
 
-    print(border)
-    for q_line, h_line in zip(question_lines, hangman_lines):
-        print(f"| {q_line.ljust(max_length)} | {h_line.ljust(max_length)} |")
-    print(border)
+        self.ques_asked.append(ques)  # Add the question to the list of asked questions to prevent repeat questions
 
+        # Create the SQL query to fetch the question data from the database
+        query = "SELECT * FROM question WHERE SR_No = " + str(ques)
+        mycursor.execute(query)  # Execute the query
+        ask = mycursor.fetchone()  # Fetch the first result of the query (a single question)
 
+        if ask:
+            # If a question is found, extract the question text and its possible answers from the database row
+            question_text = f"{ask[1]}"  # Assuming ask[1] contains the question text
+            answers = [ask[2], ask[3], ask[4], ask[5]]  # The possible answers are assumed to be in ask[2] to ask[5]
+            return question_text, answers, ask[
+                6], None  # Return the question, answer options, and the correct answer (ask[6])
 
-def get_hangman_stage(wrong_attempts):
-    """Returns the hangman stage based on the number of wrong attempts."""
-    stages = [
-        "\n\n\n\n\n\n_____",
-        '''\n |
-         |
-         |
-         |
-         |
-        _____''',
-                '''  _______
-         |
-         |
-         |
-         |
-         |
-        _____''',
-                '''  _______
-         |       |
-         |
-         |
-         |
-         |
-        _____''',
-                '''  _______
-         |       |
-         |       O
-         |
-         |
-         |
-        _____''',
-                '''  _______
-         |       |
-         |       O
-         |       |
-         |
-         |
-        _____''',
-                '''  _______
-         |       |
-         |       O
-         |      /|\\
-         |
-         |
-        _____''',
-                '''  _______
-         |       |
-         |       O
-         |      /|\\
-         |      / 
-        _____''',
-                '''  _______
-         |       |
-         |       O
-         |      /|\\
-         |      / \\
-        _____'''
-            ]
-    return stages[wrong_attempts]
-
-points = 0
-wrong_attempts = 0
-max_attempts = 8
-ques_asked = []
-max_ques = level(int(input('1. easy\n2. normal\n3. hard\nChoose your level:   ')))
-while wrong_attempts < max_attempts and len(ques_asked) != max_ques:
-    ques = random.randint(1, 120)
-    if ques not in ques_asked:
-        ques_asked.append(ques)
-        query = "select * from question where SR_No = " + str(ques) + ""
-        mycursor.execute(query)
-        ask = mycursor.fetchone()
-
-        question_text = f"{ask[1]}\nA. {ask[2]}\nB. {ask[3]}\nC. {ask[4]}\nD. {ask[5]}"
-        hangman_stage = get_hangman_stage(wrong_attempts)
-        display_question_with_hangman(question_text, hangman_stage)
-
-        ans = input("Enter your choice: ")
-        if ans.lower() == ask[6]:
-            points += 1
-        else:
-            wrong_attempts += 1
-
-if wrong_attempts == max_attempts:
-    print("Game Over! The hangman is complete.")
-    print(get_hangman_stage(wrong_attempts))
-    print(f"You scored {points} points!")
-else:
-    print(f"You scored {points} points!")
+        # Return None if no valid question is found
+        return None, None, None, None
