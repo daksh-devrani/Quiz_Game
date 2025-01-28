@@ -1,6 +1,5 @@
 import random  # Importing the random module to generate random numbers
-from Quiz_Game.data import \
-    mycursor  # Importing the database cursor from the 'data' module to interact with the database
+from Quiz_Game.data import * # Importing the database and cursor from the 'data' module to interact with the database
 
 
 # Function to select the difficulty level and return the corresponding maximum number of questions
@@ -18,7 +17,7 @@ class QuizLogic:
     def __init__(self):
         self.points = 0  # Initialize the points to 0
         self.wrong_attempts = 0  # Initialize wrong attempts to 0
-        self.ques_asked = []  # List to store the questions that have already been asked to avoid repetition
+        self.ques_asked = [95, 30, 112, 4, 11]  # List to store the questions that have already been asked to avoid repetition
 
     def load_question(self, max_ques):
         """Load a question from the database based on difficulty level"""

@@ -57,7 +57,7 @@ if not check():
     """)
 
     # Regex pattern to extract question and number
-    pattern = '([0-9]*). ([A-z ]*)'
+    pattern = '([0-9]*).()([A-z ,? 0-9 ()-]*)'
 
     # Fetching HTML content from the specified URL and parsing it with BeautifulSoup
     content = requests.get("https://ays-pro.com/blog/free-general-knowledge-questions").content
@@ -80,7 +80,7 @@ if not check():
             # Matching the question number and text using regex
             question = re.search(pattern, i.get_text(strip=True))
             ques_bank.append(question.group(1))  # Add question number
-            ques_bank.append(question.group(2))  # Add question text
+            ques_bank.append(question.group(3))  # Add question text
             # Getting options from the corresponding ordered list
             options = opt[count].get_text(separator='  ', strip=True).split("  ")
             ques_bank.extend(options)  # Adding options to the question data
